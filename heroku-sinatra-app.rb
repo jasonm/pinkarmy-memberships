@@ -8,6 +8,12 @@
 require 'rubygems'
 require 'sinatra'
 
+require 'vendor/frozen'
+require 'sinatra'
+require 'money'
+require 'paypal'
+
+
 configure :production do
   # Configure stuff here you'll want to
   # only be run at Heroku at boot
@@ -17,10 +23,10 @@ configure :production do
 end
 
 # Quick test
-get '/' do
-  "Congradulations!
-   You're running a Sinatra application on Heroku!"
-end
+# get '/' do
+#   "Congradulations!
+#    You're running a Sinatra application on Heroku!"
+# end
 
 # Test at <appname>.heroku.com
 
@@ -31,3 +37,29 @@ end
 # get '/env' do
 #   ENV.inspect
 # end
+
+# =========== NEW ============
+
+get '/' do
+  File.read('payment.html')
+end
+
+get '/paid' do
+  "Thanks for your payment. <pre>#{params.inspect}</pre>"
+end
+
+# http://dist.leetsoft.com/api/paypal/
+post '/ipn' do
+  ipn_data = request.env["rack.input"].read
+  ipn = Paypal::Notification.new(ipn_data)
+
+  if ipn.acknowledge
+    puts "PayPal IPN acknowledged successfully:"
+  else
+    puts "PayPal IPN failed to acknowledge:"
+  end
+  p ipn.inspect
+
+  return nil
+end
+
